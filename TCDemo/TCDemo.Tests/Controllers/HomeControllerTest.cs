@@ -72,5 +72,26 @@ namespace TCDemo.Tests.Controllers
             Console.WriteLine("Number value is" + sum);
 
         }
+
+        [Test]
+        public void LongRunningConsole()
+        {
+            long sum = 0;
+            var length = 10;
+            for (int i = 0; i < length; i++)
+            {
+                for (int j = 0; j < length; j++)
+                {
+                    for (int k = 0; k < length; k++)
+                    {
+                        var number = i * k * j;
+                        sum += number;
+                    }
+                }
+            }
+
+            Console.WriteLine("Number value is" + sum);
+
+        }
     }
 }
