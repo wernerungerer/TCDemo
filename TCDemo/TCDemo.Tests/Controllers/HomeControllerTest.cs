@@ -74,7 +74,7 @@ namespace TCDemo.Tests.Controllers
         }
 
         [Test]
-        public void LongRunningConsole()
+        public void LongRunningConsole2()
         {
             long sum = 0;
             var length = 10;
