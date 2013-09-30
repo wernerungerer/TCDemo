@@ -56,7 +56,7 @@ namespace TCDemo.Tests.Controllers
         public void LongRunningConsole()
         {
             long sum = 0;
-            var length = 100;
+            var length = 101;
             for (int i = 0; i < length; i++)
             {
                 for (int j = 0; j < length; j++)
