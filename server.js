@@ -59,6 +59,9 @@ app.get('/auth/google/callback', async (req, res) => {
     const { tokens } = await oauth2Client.getToken(code);
     req.session.tokens = tokens;
 
+    // Log granted scopes for debugging
+    console.log('OAuth tokens received. Scopes:', tokens.scope || 'no scope field in token');
+
     // Get user info
     oauth2Client.setCredentials(tokens);
     const oauth2 = google.oauth2({ version: 'v2', auth: oauth2Client });
@@ -85,6 +88,24 @@ app.get('/auth/status', (req, res) => {
   }
 });
 
+// Debug: check what scopes the current token has
+app.get('/auth/debug-token', requireAuth, async (req, res) => {
+  try {
+    const tokenInfo = await fetch(
+      `https://oauth2.googleapis.com/tokeninfo?access_token=${req.session.tokens.access_token}`
+    );
+    const data = await tokenInfo.json();
+    console.log('Token info:', JSON.stringify(data, null, 2));
+    res.json({
+      granted_scopes: data.scope ? data.scope.split(' ') : [],
+      expires_in: data.expires_in,
+      error: data.error_description || null
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Logout
 app.post('/auth/logout', (req, res) => {
   req.session.destroy();
@@ -92,14 +113,16 @@ app.post('/auth/logout', (req, res) => {
 });
 
 // Helper to make authenticated Google Photos API calls
-async function photosApiCall(tokens, url, options = {}) {
+async function photosApiCall(req, url, options = {}) {
   const oauth2Client = createOAuth2Client();
+  let tokens = req.session.tokens;
   oauth2Client.setCredentials(tokens);
 
   // Refresh token if needed
   if (tokens.expiry_date && tokens.expiry_date < Date.now()) {
     const { credentials } = await oauth2Client.refreshAccessToken();
     tokens = credentials;
+    req.session.tokens = tokens; // Save refreshed tokens back to session
   }
 
   const fetchOptions = {
@@ -126,7 +149,7 @@ app.get('/api/photos', requireAuth, async (req, res) => {
     let url = 'https://photoslibrary.googleapis.com/v1/mediaItems?pageSize=50';
     if (pageToken) url += `&pageToken=${pageToken}`;
 
-    const data = await photosApiCall(req.session.tokens, url);
+    const data = await photosApiCall(req, url);
     res.json(data);
   } catch (err) {
     console.error('List photos error:', err.message);
@@ -163,7 +186,7 @@ app.get('/api/albums', requireAuth, async (req, res) => {
     let url = 'https://photoslibrary.googleapis.com/v1/albums?pageSize=50';
     if (pageToken) url += `&pageToken=${pageToken}`;
 
-    const data = await photosApiCall(req.session.tokens, url);
+    const data = await photosApiCall(req, url);
     res.json(data);
   } catch (err) {
     console.error('List albums error:', err.message);
