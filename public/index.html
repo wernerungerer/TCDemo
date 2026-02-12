@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <title>Portal Photos</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <!-- Login Screen -->
+  <div id="screen-login" class="screen active">
+    <div class="login-container">
+      <h1>Portal Photos</h1>
+      <p class="subtitle">View your Google Photos on your Portal</p>
+      <button id="btn-login" class="btn btn-primary btn-xl" onclick="loginWithGoogle()">
+        <svg class="google-icon" viewBox="0 0 24 24" width="28" height="28">
+          <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/>
+          <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+          <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+          <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+        </svg>
+        Sign in with Google
+      </button>
+    </div>
+  </div>
+
+  <!-- Main App Screen -->
+  <div id="screen-main" class="screen">
+    <!-- Top Navigation Bar -->
+    <nav class="top-bar">
+      <div class="top-bar-left">
+        <h2>Portal Photos</h2>
+      </div>
+      <div class="top-bar-right">
+        <span id="user-name" class="user-info"></span>
+        <button class="btn btn-sm" onclick="logout()">Logout</button>
+      </div>
+    </nav>
+
+    <!-- Tab Navigation -->
+    <div class="tab-bar">
+      <button class="tab active" data-tab="browse" onclick="switchTab('browse')">Browse Photos</button>
+      <button class="tab" data-tab="collections" onclick="switchTab('collections')">My Collections</button>
+      <button class="tab" data-tab="slideshow" onclick="switchTab('slideshow')">Slideshow</button>
+    </div>
+
+    <!-- Browse Photos Tab -->
+    <div id="tab-browse" class="tab-content active">
+      <div class="toolbar">
+        <div class="toolbar-left">
+          <button class="btn btn-primary" id="btn-add-to-collection" onclick="showAddToCollectionModal()" disabled>
+            Add Selected to Collection
+          </button>
+          <span id="selection-count" class="selection-info">0 selected</span>
+        </div>
+        <div class="toolbar-right">
+          <button class="btn" id="btn-select-all" onclick="toggleSelectAll()">Select All</button>
+          <button class="btn" id="btn-clear-selection" onclick="clearSelection()">Clear</button>
+        </div>
+      </div>
+      <div id="photos-grid" class="photos-grid">
+        <div class="loading" id="photos-loading">Loading photos...</div>
+      </div>
+      <div class="load-more-container">
+        <button id="btn-load-more" class="btn btn-lg" onclick="loadMorePhotos()" style="display:none">
+          Load More Photos
+        </button>
+      </div>
+    </div>
+
+    <!-- Collections Tab -->
+    <div id="tab-collections" class="tab-content">
+      <div class="toolbar">
+        <div class="toolbar-left">
+          <h3>Your Collections</h3>
+        </div>
+      </div>
+      <div id="collections-list" class="collections-list">
+        <p class="empty-state">No collections yet. Browse photos and add them to a collection.</p>
+      </div>
+    </div>
+
+    <!-- Slideshow Tab -->
+    <div id="tab-slideshow" class="tab-content">
+      <div class="toolbar">
+        <h3>Start a Slideshow</h3>
+      </div>
+      <div class="slideshow-setup">
+        <p>Select one or more collections to include in the slideshow:</p>
+        <div id="slideshow-collection-picker" class="collection-picker">
+          <p class="empty-state">No collections available. Create a collection first.</p>
+        </div>
+        <div class="slideshow-controls-setup">
+          <label class="speed-label">
+            Slide Duration:
+            <select id="slide-speed" class="select-lg">
+              <option value="3000">3 seconds</option>
+              <option value="5000" selected>5 seconds</option>
+              <option value="8000">8 seconds</option>
+              <option value="10000">10 seconds</option>
+              <option value="15000">15 seconds</option>
+              <option value="30000">30 seconds</option>
+            </select>
+          </label>
+          <label class="shuffle-label">
+            <input type="checkbox" id="slide-shuffle"> Shuffle order
+          </label>
+        </div>
+        <button id="btn-start-slideshow" class="btn btn-primary btn-xl" onclick="startSlideshow()" disabled>
+          Start Slideshow
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Slideshow Fullscreen View -->
+  <div id="screen-slideshow" class="screen slideshow-screen">
+    <img id="slideshow-image" class="slideshow-image" src="" alt="Slideshow photo">
+    <div id="slideshow-overlay" class="slideshow-overlay">
+      <div class="slideshow-top-bar">
+        <span id="slideshow-counter" class="slideshow-counter">1 / 10</span>
+        <span id="slideshow-collection-name" class="slideshow-name"></span>
+      </div>
+      <div class="slideshow-bottom-bar">
+        <button class="btn btn-slide" onclick="prevSlide()">&#9664; Prev</button>
+        <button class="btn btn-slide" id="btn-play-pause" onclick="togglePlayPause()">&#9646;&#9646; Pause</button>
+        <button class="btn btn-slide" onclick="nextSlide()">Next &#9654;</button>
+        <button class="btn btn-slide btn-fullscreen" onclick="toggleFullscreen()">&#x26F6; Fullscreen</button>
+        <button class="btn btn-slide btn-exit" onclick="exitSlideshow()">&#10005; Exit</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add to Collection Modal -->
+  <div id="modal-collection" class="modal">
+    <div class="modal-content">
+      <h3>Add to Collection</h3>
+      <div id="existing-collections" class="existing-collections"></div>
+      <div class="new-collection-form">
+        <input type="text" id="new-collection-name" class="input-lg" placeholder="New collection name...">
+        <button class="btn btn-primary btn-lg" onclick="addToNewCollection()">Create & Add</button>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-lg" onclick="closeModal()">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Collection Detail Modal -->
+  <div id="modal-collection-detail" class="modal">
+    <div class="modal-content modal-wide">
+      <div class="modal-header">
+        <h3 id="detail-collection-name"></h3>
+        <button class="btn btn-sm" onclick="closeDetailModal()">&#10005;</button>
+      </div>
+      <div id="detail-photos-grid" class="photos-grid"></div>
+      <div class="modal-actions">
+        <button class="btn btn-primary btn-lg" onclick="startSlideshowFromDetail()">Start Slideshow</button>
+        <button class="btn btn-lg btn-danger" onclick="deleteCollection()">Delete Collection</button>
+        <button class="btn btn-lg" onclick="closeDetailModal()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/app.js"></script>
+</body>
+</html>
